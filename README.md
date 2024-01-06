@@ -1,2 +1,2 @@
-# K_URP_PostProcessingLibrary
+# K_URP_PostProcessLibrary
 Custom post process library for unity URP
