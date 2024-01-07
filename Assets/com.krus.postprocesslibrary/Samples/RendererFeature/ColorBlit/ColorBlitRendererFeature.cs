@@ -4,6 +4,11 @@ using UnityEngine.Rendering.Universal;
 
 internal class ColorBlitRendererFeature : ScriptableRendererFeature
 {   
+
+    //////////////
+    // Settings // 
+    //////////////
+
     [System.Serializable]
     public class Settings 
     {   
@@ -15,6 +20,12 @@ internal class ColorBlitRendererFeature : ScriptableRendererFeature
         [Header("Shader Params")]
         public float intensity = 1.0f;
     }
+
+    
+
+    //////////////////////
+    // Renderer Feature // 
+    //////////////////////
 
     public Settings settings = new Settings();
 
@@ -46,8 +57,6 @@ internal class ColorBlitRendererFeature : ScriptableRendererFeature
             m_RenderPass.SetTarget(renderer.cameraColorTargetHandle);
         }
     }
-
-
 
     protected override void Dispose(bool disposing)
     {
