@@ -3,11 +3,9 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class CustomRendererFeature : ScriptableRendererFeature 
-{
+public class CustomRendererFeature : ScriptableRendererFeature {
 
-    public class CustomRenderPass : ScriptableRenderPass 
-    {
+    public class CustomRenderPass : ScriptableRenderPass {
 
         private Settings settings;
         private FilteringSettings filteringSettings;
@@ -15,8 +13,7 @@ public class CustomRendererFeature : ScriptableRendererFeature
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         private RTHandle rtCustomColor, rtTempColor;
 
-        public CustomRenderPass(Settings settings, string name) 
-        {
+        public CustomRenderPass(Settings settings, string name) {
             this.settings = settings;
             filteringSettings = new FilteringSettings(RenderQueueRange.opaque, settings.layerMask);
             
@@ -28,8 +25,7 @@ public class CustomRendererFeature : ScriptableRendererFeature
             _profilingSampler = new ProfilingSampler(name);
         }
 
-        public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData) 
-        {
+        public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData) {
             var colorDesc = renderingData.cameraData.cameraTargetDescriptor;
             colorDesc.depthBufferBits = 0;
 
@@ -37,12 +33,9 @@ public class CustomRendererFeature : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref rtTempColor, colorDesc, name: "_TemporaryColorTexture");
 
             // Set up custom color target buffer (to render objects into)
-            if (settings.colorTargetDestinationID != "")
-            {
+            if (settings.colorTargetDestinationID != ""){
                 RenderingUtils.ReAllocateIfNeeded(ref rtCustomColor, colorDesc, name: settings.colorTargetDestinationID);
-            }
-            else
-            {
+            }else{
                 // colorDestinationID is blank, use camera target instead
                 rtCustomColor = renderingData.cameraData.renderer.cameraColorTargetHandle;
             }
@@ -54,12 +47,10 @@ public class CustomRendererFeature : ScriptableRendererFeature
             ConfigureClear(ClearFlag.Color, new Color(0,0,0,0));
         }
 
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) 
-        {
+        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
             CommandBuffer cmd = CommandBufferPool.Get();
             // Set up profiling scope for Profiler & Frame Debugger
-            using (new ProfilingScope(cmd, _profilingSampler)) 
-            {
+            using (new ProfilingScope(cmd, _profilingSampler)) {
                 // Command buffer shouldn't contain anything, but apparently need to
                 // execute so DrawRenderers call is put under profiling scope title correctly
                 context.ExecuteCommandBuffer(cmd);
@@ -68,8 +59,7 @@ public class CustomRendererFeature : ScriptableRendererFeature
                 // Draw Renderers to Render Target (set up in OnCameraSetup)
                 SortingCriteria sortingCriteria = renderingData.cameraData.defaultOpaqueSortFlags;
                 DrawingSettings drawingSettings = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
-                if (settings.overrideMaterial != null) 
-                {
+                if (settings.overrideMaterial != null) {
                     drawingSettings.overrideMaterialPassIndex = settings.overrideMaterialPass;
                     drawingSettings.overrideMaterial = settings.overrideMaterial;
                 }
@@ -81,11 +71,9 @@ public class CustomRendererFeature : ScriptableRendererFeature
                     cmd.SetGlobalTexture(settings.colorTargetDestinationID, rtCustomColor);
                 
                 // Apply material (e.g. Fullscreen Graph) to camera
-                if (settings.blitMaterial != null) 
-                {
+                if (settings.blitMaterial != null) {
                     RTHandle camTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
-                    if (camTarget != null && rtTempColor != null) 
-                    {
+                    if (camTarget != null && rtTempColor != null) {
                         Blitter.BlitCameraTexture(cmd, camTarget, rtTempColor, settings.blitMaterial, 0);
                         Blitter.BlitCameraTexture(cmd, rtTempColor, camTarget);
                     }
@@ -101,8 +89,7 @@ public class CustomRendererFeature : ScriptableRendererFeature
         public override void OnCameraCleanup(CommandBuffer cmd) {}
 
         // Cleanup Called by feature below
-        public void Dispose() 
-        {
+        public void Dispose() {
             if (settings.colorTargetDestinationID != "")
                 rtCustomColor?.Release();
             rtTempColor?.Release();
@@ -112,8 +99,7 @@ public class CustomRendererFeature : ScriptableRendererFeature
     // Exposed Settings
 
     [System.Serializable]
-    public class Settings 
-    {
+    public class Settings {
         public bool showInSceneView = true;
         public RenderPassEvent _event = RenderPassEvent.AfterRenderingOpaques;
 
@@ -133,22 +119,19 @@ public class CustomRendererFeature : ScriptableRendererFeature
 
     private CustomRenderPass m_ScriptablePass;
 
-    public override void Create() 
-    {
+    public override void Create() {
         m_ScriptablePass = new CustomRenderPass(settings, name);
         m_ScriptablePass.renderPassEvent = settings._event;
     }
 
-    public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) 
-    {
+    public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) {
         CameraType cameraType = renderingData.cameraData.cameraType;
         if (cameraType == CameraType.Preview) return; // Ignore feature for editor/inspector previews & asset thumbnails
         if (!settings.showInSceneView && cameraType == CameraType.SceneView) return;
         renderer.EnqueuePass(m_ScriptablePass);
     }
 
-    protected override void Dispose(bool disposing) 
-    {
+    protected override void Dispose(bool disposing) {
         m_ScriptablePass.Dispose();
     }
 }
