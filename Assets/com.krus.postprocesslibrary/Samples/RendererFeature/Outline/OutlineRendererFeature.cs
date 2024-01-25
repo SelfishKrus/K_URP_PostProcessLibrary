@@ -18,15 +18,25 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
         public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
         public string colorTargetDestinationID = "_CamColTex";
 
-        [Header("Shader Params")]
+        [Header("Depth Outline")]
+        public bool enableDepthOutline = true;
         [Range(0.0f, 1.0f)]
-        public float threshold = 0.5f;
+        public float depthThreshold = 0.5f;
         [Range(0.0f, 0.03f)]
-        public float thickness = 0.01f;
+        public float depthThickness = 0.01f;
         [Range(0.0f, 1.0f)]
-        public float smoothness = 0.1f;
+        public float depthSmoothness = 0.0f;
+        public Color depthOutlineColor = Color.black;
 
-        public Color outlineColor = Color.black;
+        [Header("Normal Outline")]
+        public bool enableNormalOutline = true;
+        [Range(0.0f, 1.0f)]
+        public float normalThreshold = 0.5f;
+        [Range(0.0f, 0.03f)]
+        public float normalThickness = 0.01f;
+        [Range(0.0f, 1.0f)]
+        public float normalSmoothness = 0.0f;
+        public Color normalOutlineColor = Color.black;
         
     }
 
@@ -53,6 +63,7 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
     {
         // if (renderingData.cameraData.camera.cameraType != CameraType.Game && renderingData.cameraData.camera.cameraType != CameraType.SceneView)
             renderer.EnqueuePass(m_RenderPass);
+            m_RenderPass.ConfigureInput(ScriptableRenderPassInput.Color);
             m_RenderPass.ConfigureInput(ScriptableRenderPassInput.Normal);
     }
 
@@ -61,9 +72,6 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
     {
         // if (renderingData.cameraData.camera.cameraType != CameraType.Game && renderingData.cameraData.camera.cameraType != CameraType.SceneView)
         // {
-            // Calling ConfigureInput with the ScriptableRenderPassInput.Color argument
-            // ensures that the opaque texture is available to the Render Pass.
-            m_RenderPass.ConfigureInput(ScriptableRenderPassInput.Color);
             m_RenderPass.SetTarget(renderer.cameraColorTargetHandle);
         // }
     }
@@ -71,6 +79,7 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
     protected override void Dispose(bool disposing)
     {
         CoreUtils.Destroy(m_Material);
+        m_RenderPass.Dispose();
     }
 
     //////////////////////
@@ -79,7 +88,7 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
 
     internal class DepthOutlineRenderPass : ScriptableRenderPass
     {   
-        ProfilingSampler m_profilingSampler = new ProfilingSampler("DepthOutline");
+        ProfilingSampler m_profilingSampler = new ProfilingSampler("Outline");
         Material m_material;
         RTHandle m_cameraColorTarget;
         RTHandle rtCustomColor, rtTempColor;
@@ -101,10 +110,23 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
 
         public void PassShaderData(Material material)
         {
-           material.SetFloat("_Threshold", m_settings.threshold);
-           material.SetFloat("_Thickness", m_settings.thickness);
-           material.SetFloat("_Smoothness", m_settings.smoothness);
-           material.SetVector("_OutlineColor", m_settings.outlineColor);
+            if (m_settings.enableDepthOutline)
+            {
+                material.EnableKeyword("_DEPTH_OUTLINE");
+            }
+            material.SetFloat("_Depth_Threshold", m_settings.depthThreshold);
+            material.SetFloat("_Depth_Thickness", m_settings.depthThickness);
+            material.SetFloat("_Depth_Smoothness", m_settings.depthSmoothness);
+            material.SetVector("_Depth_OutlineColor", m_settings.depthOutlineColor);
+
+            if (m_settings.enableNormalOutline)
+            {
+                material.EnableKeyword("_NORMAL_OUTLINE");
+            }
+            material.SetFloat("_Normal_Threshold", m_settings.normalThreshold);
+            material.SetFloat("_Normal_Thickness", m_settings.normalThickness);
+            material.SetFloat("_Normal_Smoothness", m_settings.normalSmoothness);
+            material.SetVector("_Normal_OutlineColor", m_settings.normalOutlineColor);
         }
 
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
@@ -113,6 +135,7 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
             colorDesc.depthBufferBits = 0;
 
             // Set up temporary color buffer (for blit)
+
             RenderingUtils.ReAllocateIfNeeded(ref rtCustomColor, colorDesc, name: "_RTCustomColor");
             RenderingUtils.ReAllocateIfNeeded(ref rtTempColor, colorDesc, name: "_RTTempColor");
 
@@ -144,6 +167,25 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
             cmd.Clear();
 
             CommandBufferPool.Release(cmd);
+
+        }
+
+        public override void OnCameraCleanup(CommandBuffer cmd)
+        {
+
+        }
+
+        public override void FrameCleanup(CommandBuffer cmd)
+        {
+            base.FrameCleanup(cmd);
+            // rtCustomColor.Release();
+            // rtTempColor.Release();
+        }
+
+        public void Dispose()
+        {
+            rtCustomColor.Release();
+            rtTempColor.Release();
         }
     }
 }
