@@ -10,7 +10,7 @@ internal class ColorBlitRendererFeature : ScriptableRendererFeature
     //////////////
 
     [System.Serializable]
-    public class Settings 
+    public class ColorBlitSettings 
     {   
         [Header("Render Pass")]
         public Shader m_shader;
@@ -27,7 +27,7 @@ internal class ColorBlitRendererFeature : ScriptableRendererFeature
     // Renderer Feature // 
     //////////////////////
 
-    public Settings settings = new Settings();
+    public ColorBlitSettings settings = new ColorBlitSettings();
 
     Material m_Material;
 
@@ -42,20 +42,20 @@ internal class ColorBlitRendererFeature : ScriptableRendererFeature
     public override void AddRenderPasses(ScriptableRenderer renderer,
                                     ref RenderingData renderingData)
     {
-        if (renderingData.cameraData.cameraType == CameraType.Game)
+        // if (renderingData.cameraData.camera.cameraType != CameraType.Game && renderingData.cameraData.camera.cameraType != CameraType.SceneView)
             renderer.EnqueuePass(m_RenderPass);
     }
 
     public override void SetupRenderPasses(ScriptableRenderer renderer,
                                         in RenderingData renderingData)
     {
-        if (renderingData.cameraData.cameraType == CameraType.Game)
-        {
+        // if (renderingData.cameraData.camera.cameraType != CameraType.Game && renderingData.cameraData.camera.cameraType != CameraType.SceneView)
+        // {
             // Calling ConfigureInput with the ScriptableRenderPassInput.Color argument
             // ensures that the opaque texture is available to the Render Pass.
             m_RenderPass.ConfigureInput(ScriptableRenderPassInput.Color);
             m_RenderPass.SetTarget(renderer.cameraColorTargetHandle);
-        }
+        // }
     }
 
     protected override void Dispose(bool disposing)

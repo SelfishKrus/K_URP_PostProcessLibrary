@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class CustomRendererFeature : ScriptableRendererFeature {
+public class NormalOutlineRendererFeature : ScriptableRendererFeature {
 
     public class CustomRenderPass : ScriptableRenderPass {
 

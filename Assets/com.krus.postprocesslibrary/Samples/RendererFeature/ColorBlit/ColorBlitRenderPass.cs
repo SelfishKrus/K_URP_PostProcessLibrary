@@ -9,10 +9,9 @@ internal class ColorBlitRenderPass : ScriptableRenderPass
     Material m_material;
     RTHandle m_cameraColorTarget;
     RTHandle rtCustomColor, rtTempColor;
-    // float m_Intensity;
-    ColorBlitRendererFeature.Settings m_settings;
+    ColorBlitRendererFeature.ColorBlitSettings m_settings;
 
-    public ColorBlitRenderPass(Material material, ColorBlitRendererFeature.Settings settings)
+    public ColorBlitRenderPass(Material material, ColorBlitRendererFeature.ColorBlitSettings settings)
     {   
         m_material = material;
         this.m_settings = settings;
@@ -37,7 +36,7 @@ internal class ColorBlitRenderPass : ScriptableRenderPass
         // Set up temporary color buffer (for blit)
         RenderingUtils.ReAllocateIfNeeded(ref rtCustomColor, colorDesc, name: "_RTCustomColor");
         RenderingUtils.ReAllocateIfNeeded(ref rtTempColor, colorDesc, name: "_RTTempColor");
-        
+
         ConfigureTarget(m_cameraColorTarget);
         ConfigureTarget(rtCustomColor);
         ConfigureTarget(rtTempColor);
@@ -46,8 +45,6 @@ internal class ColorBlitRenderPass : ScriptableRenderPass
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         var cameraData = renderingData.cameraData;
-        if (cameraData.camera.cameraType != CameraType.Game)
-            return;
 
         if (m_material == null)
             return;
@@ -55,14 +52,15 @@ internal class ColorBlitRenderPass : ScriptableRenderPass
         CommandBuffer cmd = CommandBufferPool.Get();
         using (new ProfilingScope(cmd, m_profilingSampler))
         {
-            // m_Material.SetFloat("_Intensity", m_Intensity);
             PassShaderData(m_material);
             m_material.SetTexture(m_settings.colorTargetDestinationID, m_cameraColorTarget);
 
+            RTHandle rtCamera = renderingData.cameraData.renderer.cameraColorTargetHandle;
+
             Blitter.BlitCameraTexture(cmd, m_cameraColorTarget, rtCustomColor, m_material, 0);
             Blitter.BlitCameraTexture(cmd, rtCustomColor, m_cameraColorTarget);
-
         }
+
         context.ExecuteCommandBuffer(cmd);
         cmd.Clear();
 
