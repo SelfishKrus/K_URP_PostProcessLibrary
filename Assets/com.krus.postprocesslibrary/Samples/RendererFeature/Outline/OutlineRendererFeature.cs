@@ -14,29 +14,29 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
     public class OutlineSettings 
     {   
         [Header("Render Pass")]
-        public Shader m_shader;
+        public Material material;
         public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
         public string colorTargetDestinationID = "_CamColTex";
 
-        [Header("Depth Outline")]
-        public bool enableDepthOutline = true;
-        [Range(0.0f, 1.0f)]
-        public float depthThreshold = 0.5f;
-        [Range(0.0f, 0.03f)]
-        public float depthThickness = 0.01f;
-        [Range(0.0f, 1.0f)]
-        public float depthSmoothness = 0.0f;
-        public Color depthOutlineColor = Color.black;
+        // [Header("Depth Outline")]
+        // public bool enableDepthOutline = true;
+        // [Range(0.0f, 1.0f)]
+        // public float depthThreshold = 0.5f;
+        // [Range(0.0f, 0.03f)]
+        // public float depthThickness = 0.01f;
+        // [Range(0.0f, 1.0f)]
+        // public float depthSmoothness = 0.0f;
+        // public Color depthOutlineColor = Color.black;
 
-        [Header("Normal Outline")]
-        public bool enableNormalOutline = true;
-        [Range(0.0f, 1.0f)]
-        public float normalThreshold = 0.5f;
-        [Range(0.0f, 0.03f)]
-        public float normalThickness = 0.01f;
-        [Range(0.0f, 1.0f)]
-        public float normalSmoothness = 0.0f;
-        public Color normalOutlineColor = Color.black;
+        // [Header("Normal Outline")]
+        // public bool enableNormalOutline = true;
+        // [Range(0.0f, 1.0f)]
+        // public float normalThreshold = 0.5f;
+        // [Range(0.0f, 0.03f)]
+        // public float normalThickness = 0.01f;
+        // [Range(0.0f, 1.0f)]
+        // public float normalSmoothness = 0.0f;
+        // public Color normalOutlineColor = Color.black;
         
     }
 
@@ -54,8 +54,7 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
 
     public override void Create()
     {
-        m_Material = CoreUtils.CreateEngineMaterial(settings.m_shader);
-        m_RenderPass = new DepthOutlineRenderPass(m_Material, settings);
+        m_RenderPass = new DepthOutlineRenderPass(settings);
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer,
@@ -92,11 +91,11 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
         Material m_material;
         RTHandle m_cameraColorTarget;
         RTHandle rtCustomColor, rtTempColor;
-        OutlineRendererFeature.OutlineSettings m_settings;
+        OutlineSettings m_settings;
 
-        public DepthOutlineRenderPass(Material material, OutlineRendererFeature.OutlineSettings settings)
+        public DepthOutlineRenderPass(OutlineSettings settings)
         {   
-            m_material = material;
+            m_material = settings.material;
             this.m_settings = settings;
             renderPassEvent = m_settings.renderPassEvent;
         }
@@ -110,23 +109,23 @@ internal class OutlineRendererFeature : ScriptableRendererFeature
 
         public void PassShaderData(Material material)
         {
-            if (m_settings.enableDepthOutline)
-            {
-                material.EnableKeyword("_DEPTH_OUTLINE");
-            }
-            material.SetFloat("_Depth_Threshold", m_settings.depthThreshold);
-            material.SetFloat("_Depth_Thickness", m_settings.depthThickness);
-            material.SetFloat("_Depth_Smoothness", m_settings.depthSmoothness);
-            material.SetVector("_Depth_OutlineColor", m_settings.depthOutlineColor);
+            // if (m_settings.enableDepthOutline)
+            // {
+                // material.EnableKeyword("_DEPTH_OUTLINE");
+            // }
+            // material.SetFloat("_Depth_Threshold", m_settings.depthThreshold);
+            // material.SetFloat("_Depth_Thickness", m_settings.depthThickness);
+            // material.SetFloat("_Depth_Smoothness", m_settings.depthSmoothness);
+            // material.SetVector("_Depth_OutlineColor", m_settings.depthOutlineColor);
 
-            if (m_settings.enableNormalOutline)
-            {
-                material.EnableKeyword("_NORMAL_OUTLINE");
-            }
-            material.SetFloat("_Normal_Threshold", m_settings.normalThreshold);
-            material.SetFloat("_Normal_Thickness", m_settings.normalThickness);
-            material.SetFloat("_Normal_Smoothness", m_settings.normalSmoothness);
-            material.SetVector("_Normal_OutlineColor", m_settings.normalOutlineColor);
+            // if (m_settings.enableNormalOutline)
+            // {
+            //     material.EnableKeyword("_NORMAL_OUTLINE");
+            // }
+            // material.SetFloat("_Normal_Threshold", m_settings.normalThreshold);
+            // material.SetFloat("_Normal_Thickness", m_settings.normalThickness);
+            // material.SetFloat("_Normal_Smoothness", m_settings.normalSmoothness);
+            // material.SetVector("_Normal_OutlineColor", m_settings.normalOutlineColor);
         }
 
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)

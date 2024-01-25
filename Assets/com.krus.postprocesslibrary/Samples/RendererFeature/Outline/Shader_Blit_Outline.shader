@@ -1,5 +1,23 @@
 Shader "Blit/Outline"
 {
+    Properties
+    {   
+        [Toggle(_DEPTH_OUTLINE)] _Depth_Outline("Depth Outline", Float) = 1
+        _Depth_Threshold("Depth Threshold", Range(0, 1)) = 0.75
+        _Depth_Thickness("Depth Thickness", Range(0, 0.01)) = 0.01
+        _Depth_Smoothness("Depth Smoothness", Range(0, 1)) = 0.5
+        _Depth_OutlineColor("Depth Outline Color", Color) = (0, 0, 0, 0)
+
+        [Space(30)]
+
+        [Toggle(_NORMAL_OUTLINE)] _Normal_Outline("Normal Outline", Float) = 1
+        _Normal_Threshold("Normal Threshold", Range(0, 1.5)) = 0.75
+        _Normal_Thickness("Normal Thickness", Range(0, 0.01)) = 0.01
+        _Normal_Smoothness("Normal Smoothness", Range(0, 1)) = 0.5
+        _Normal_OutlineColor("Normal Outline Color", Color) = (0, 0, 0, 0)
+        _Normal_Bias("Normal Bias", Range(0, 1)) = 0.1
+    }
+
     SubShader
     {
         Tags { "RenderType"="Opaque" "RenderPipeline" = "UniversalPipeline"}
@@ -36,6 +54,7 @@ Shader "Blit/Outline"
             float _Normal_Thickness;
             float _Normal_Smoothness;
             float3 _Normal_OutlineColor;
+            float _Normal_Bias;
 
             half4 frag (Varyings input) : SV_Target
             {
@@ -55,10 +74,10 @@ Shader "Blit/Outline"
                     -1, -2, -1
                 };
 
-                #ifdef _DEPTH_OUTLINE
+                float depth = SampleSceneDepth(input.texcoord.xy).r;
+                depth = Linear01Depth(depth, _ZBufferParams);
 
-                    float depth = SampleSceneDepth(input.texcoord.xy).r;
-                    depth = Linear01Depth(depth, _ZBufferParams);
+                #ifdef _DEPTH_OUTLINE
 
                     // depth comparison
                     float edgeX_depth = 0;
@@ -85,7 +104,6 @@ Shader "Blit/Outline"
 
                 #ifdef _NORMAL_OUTLINE
                 
-                    float3 normal = SampleSceneNormals(input.texcoord.xy).rgb;
                     // normal comparison
                     float edgeX_normal = 0;
                     float edgeY_normal = 0;
@@ -102,7 +120,7 @@ Shader "Blit/Outline"
                     edgeY_normal /= 9;
 
                     float edge_normal = (1 - sqrt(edgeX_normal * edgeX_normal + edgeY_normal * edgeY_normal));
-                    edge_normal = smoothstep(_Normal_Threshold-_Normal_Smoothness, _Normal_Threshold+_Normal_Smoothness, edge_normal);
+                    edge_normal = smoothstep(_Normal_Threshold-_Normal_Smoothness, _Normal_Threshold+_Normal_Smoothness, edge_normal+_Normal_Bias);
 
                     outCol = lerp(_Normal_OutlineColor, outCol, edge_normal);
 
