@@ -30,11 +30,11 @@ Material:
     - _Depth_Smoothness: 0
     - _Depth_Thickness: 0.00345
     - _Depth_Threshold: 0.888
-    - _Normal_Bias: 0.106
+    - _Normal_Bias: 0.062
     - _Normal_Outline: 1
     - _Normal_Smoothness: 0
-    - _Normal_Thickness: 0.00337
-    - _Normal_Threshold: 0.97
+    - _Normal_Thickness: 0.0009
+    - _Normal_Threshold: 1
     m_Colors:
     - _Depth_OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _Normal_OutlineColor: {r: 0, g: 0, b: 0, a: 0}
